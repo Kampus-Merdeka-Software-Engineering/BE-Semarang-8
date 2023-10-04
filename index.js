@@ -1,64 +1,9 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
-
-const datas = [
-  {
-    name: "sawi",
-    satuan: "200gr",
-    price: "9000",
-  },
-  {
-    name: "wortel",
-    satuan: "500gr",
-    price: "7000",
-  },
-  {
-    name: "bawang merah",
-    satuan: "200gr",
-    price: "12000",
-  },
-  {
-    name: "tomat",
-    satuan: "1kg",
-    price: "20000",
-  },
-  {
-    name: "brokoli",
-    satuan: "500gr",
-    price: "15000",
-  },
-  {
-    name: "anggur",
-    satuan: "250gr",
-    price: "22000",
-  },
-  {
-    name: "semangka",
-    satuan: "1pcs",
-    price: "40000",
-  },
-  {
-    name: "apel",
-    satuan: "500gr",
-    price: "7000",
-  },
-  {
-    name: "jeruk",
-    satuan: "200gr",
-    price: "9000",
-  },
-  {
-    name: "pisang",
-    satuan: "1pcs",
-    price: "40000",
-  },
-  {
-    name: "mangga",
-    satuan: "500gr",
-    price: "7000",
-  },
-];
+const db = require('./db/index_db')
+const Product = db.product;
+const Order = db.order;
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -66,73 +11,88 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // parse application/json.
 app.use(bodyParser.json());
 
-app.get("/api/products", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "Data fetched successful!",
-    data: datas,
-  });
+app.get("/api/products", async (req, res) => {
+  try {
+    const product_get = await Product.findAll();
+    res.status(200).json({
+      success: true,
+      message: "Data fetched successful!",
+      data: product_get,
+    });
+  
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "unsuccessful"
+    });
+  }
 });
 
-app.post("/api/products", (req, res) => {
-  const {name, satuan, price} = req.body;
-  res.status(200).json({
-    success: true,
-    message: "successful!",
-    data: 
-      {
-        name: name,
-        satuan: satuan,
-        price: price
-      } 
-  });
+app.post("/api/products", async (req, res) => {
+  const value = req.body;
+  try {
+    const product_post = await Product.create(value); //insert value
+    res.status(200).json({
+      success: true,
+      message: "successful!",
+      data: product_post,    
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "unsuccessful"
+    });
+  }
 });
 
 // rest API order
 
-app.post('/api/order', (req, res) => {
-    const { name, adress, province, city, district, postalcode, phone, email, product, total, unit } = req.body;
-    res.status(201).json({
-        messege: "create data successfully",
-        data: 
-            {
-                name: name,
-                adress: adress,
-                province: province,
-                city: city,
-                district: district,
-                postalcode: postalcode,
-                phone: phone,
-                email: email,
-                product: product,
-                total: total,
-                unit: unit
-            }
-    })
-})
-
-app.get('/api/order', (req, res) => {
+app.post('/api/order', async (req, res) => {
+    const orderValue = req.body;
+    try {
+      const order_post = await Order.create(orderValue); //insert value
+      res.status(200).json({
+        success: true,
+        message: "successful!",
+        data: order_post,    
+      });
+  
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "unsuccessful"
+      });
+    }
+});
+  
+app.get('/api/order', async (req, res) => {
+  try {
+    const order_get = await Order.findAll();
     res.status(200).json({
-        messege: 'get success data all customers',
-        data:
-        {
-            name: 'Rahul',
-            adress: 'jl.bunga1',
-            province: 'kalimantan barat',
-            city: 'Palangkaraya',
-            district: 'jekan raya',
-            postalcode: '73111',
-            phone: '0821222133',
-            email: 'rahul@gmail.com',
-            product: 'brokoli',
-            total: '2',
-            unit: 'kg'
-        }
-    })
-})
-
-
+      success: true,
+      message: "Data fetched successful!",
+      data: order_get,
+    });
+  
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "unsuccessful"
+    });
+  }
+});
 
 const port = 3000;
+async function startdb(){
+  try { //ketika db terkoneksi, run app
+    await db.sequelize.sync();
+    console.log("db connected");
+    app.listen(port, () => console.log(`listening on port ${port}!`));
 
-app.listen(port, () => console.log(`listening on port ${port}!`));
+  } catch (error) {
+    console.log("db not connected");
+  }
+};
+
+startdb();
