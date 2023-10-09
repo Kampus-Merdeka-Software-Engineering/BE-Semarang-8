@@ -1,6 +1,6 @@
 function orderModel(sequelize, Sequelize) {
     const Order = sequelize.define(
-      "order",
+      "orders",
       {
         id: {
           type: Sequelize.UUID,
@@ -44,21 +44,15 @@ function orderModel(sequelize, Sequelize) {
             type: Sequelize.INTEGER,
             allowNull: false,
         },
-  
-        productname: {
-            type: Sequelize.STRING(50),
-            allowNull: false,
-        },
-
-        total: {
-            type: Sequelize.INTEGER,
-            allowNull: false,
-        },
       },
       {
         freezeTableName: true,
       }
     );
+    
+    Order.associate = (models) => {
+      Order.hasMany(models.OrderProduct, { foreignKey: 'orderId' });
+    };
   
     return Order;
   }
